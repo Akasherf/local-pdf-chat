@@ -1,32 +1,36 @@
-import pytest
+import importlib
 import os
 import sys
+
+import pytest
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 def test_imports():
-    """Test that all modules can be imported."""
-    import streamlit
-    import ollama
-    import chromadb
-    from pypdf import PdfReader
-    from langchain_text_splitters import RecursiveCharacterTextSplitter
-    from dotenv import load_dotenv
-
-    assert True
+    """Test that all required modules can be imported."""
+    modules = [
+        "streamlit",
+        "ollama",
+        "chromadb",
+        "pypdf",
+        "langchain_text_splitters",
+        "dotenv",
+    ]
+    for module in modules:
+        importlib.import_module(module)
 
 
 def test_config_defaults():
     """Test configuration defaults."""
     from app import (
+        BATCH_SIZE,
+        CHUNK_OVERLAP,
+        CHUNK_SIZE,
         EMBEDDING_MODEL,
         LLM_MODEL,
-        CHUNK_SIZE,
-        CHUNK_OVERLAP,
         TOP_K,
-        BATCH_SIZE,
     )
 
     assert EMBEDDING_MODEL == "nomic-embed-text"

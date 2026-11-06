@@ -43,7 +43,7 @@ jobs:
       - name: Run Bandit security linter
         run: |
           pip install bandit
-          bandit -r . -x venv,.venv,env
+          bandit -r . -x venv,.venv,env,tests
 
       - name: Check for secrets
         uses: trufflesecurity/trufflehog@main

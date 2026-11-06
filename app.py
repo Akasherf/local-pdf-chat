@@ -1,11 +1,15 @@
-import os
 import hashlib
-import streamlit as st
-import ollama
+import os
+
 import chromadb
-from pypdf import PdfReader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+import ollama
+import streamlit as st
+from chromadb.errors import ChromaError, NotFoundError
 from dotenv import load_dotenv
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from ollama import ResponseError as OllamaResponseError
+from pypdf import PdfReader
+from pypdf.errors import PdfReadError
 
 # Load environment variables
 load_dotenv()
@@ -129,8 +133,14 @@ if uploaded:
             )
             st.session_state.pdf_indexed = True
 
-        except Exception as e:
-            st.sidebar.error(f"❌ Error processing PDF: {str(e)}")
+        except (
+            PdfReadError,
+            ChromaError,
+            OllamaResponseError,
+            ValueError,
+            RuntimeError,
+        ) as e:
+            st.sidebar.error(f"❌ Error processing PDF: {e!s}")
             st.session_state.pdf_indexed = False
             st.stop()
 
@@ -187,8 +197,14 @@ if prompt := st.chat_input(placeholder, disabled=chat_disabled):
         response = ollama.chat(model=LLM_MODEL, messages=messages)
         answer = response["message"]["content"]
 
-    except Exception as e:
-        answer = f"❌ Error: {str(e)}"
+    except (
+        NotFoundError,
+        ChromaError,
+        OllamaResponseError,
+        ValueError,
+        RuntimeError,
+    ) as e:
+        answer = f"❌ Error: {e!s}"
         if "collection" in str(e).lower():
             answer += "\n\nTry re-uploading the PDF."
 
