@@ -75,8 +75,7 @@ if uploaded:
 
             # Chunk
             splitter = RecursiveCharacterTextSplitter(
-                chunk_size=CHUNK_SIZE,
-                chunk_overlap=CHUNK_OVERLAP
+                chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP
             )
             chunks = splitter.split_text(text)
 
@@ -97,24 +96,37 @@ if uploaded:
             all_embeddings = []
 
             for i in range(0, total_chunks, BATCH_SIZE):
-                batch = chunks[i:i + BATCH_SIZE]
-                batch_embeddings = ollama.embed(model=EMBEDDING_MODEL, input=batch)["embeddings"]
+                batch = chunks[i : i + BATCH_SIZE]
+                batch_embeddings = ollama.embed(model=EMBEDDING_MODEL, input=batch)[
+                    "embeddings"
+                ]
                 all_embeddings.extend(batch_embeddings)
 
                 # Update progress less frequently (every 10% or at end)
                 processed = min(i + BATCH_SIZE, total_chunks)
                 pct = int((processed / total_chunks) * 100)
                 if pct % 10 == 0 or processed == total_chunks:
-                    progress_bar.progress(pct / 100, text=f"Embedding: {processed}/{total_chunks} chunks ({pct}%)")
-                    status_text.info(f"Processing chunk {processed} of {total_chunks}...")
+                    progress_bar.progress(
+                        pct / 100,
+                        text=f"Embedding: {processed}/{total_chunks} chunks ({pct}%)",
+                    )
+                    status_text.info(
+                        f"Processing chunk {processed} of {total_chunks}..."
+                    )
 
             # Store all embeddings
             progress_bar.progress(1.0, text="Storing in vector DB...")
-            coll.add(documents=chunks, embeddings=all_embeddings, ids=[str(i) for i in range(total_chunks)])
+            coll.add(
+                documents=chunks,
+                embeddings=all_embeddings,
+                ids=[str(i) for i in range(total_chunks)],
+            )
 
             progress_bar.empty()
             status_text.empty()
-            st.sidebar.success(f"✅ Indexed {total_chunks} chunks from **{uploaded.name}**")
+            st.sidebar.success(
+                f"✅ Indexed {total_chunks} chunks from **{uploaded.name}**"
+            )
             st.session_state.pdf_indexed = True
 
         except Exception as e:
@@ -126,7 +138,13 @@ if uploaded:
 if st.session_state.pdf_indexed:
     st.sidebar.info(f"📄 **Current:** {st.session_state.pdf_name}")
     if st.sidebar.button("🗑️ Clear & Upload New"):
-        for key in ["messages", "pdf_indexed", "pdf_hash", "collection_name", "pdf_name"]:
+        for key in [
+            "messages",
+            "pdf_indexed",
+            "pdf_hash",
+            "collection_name",
+            "pdf_name",
+        ]:
             st.session_state[key] = [] if key == "messages" else None
         st.rerun()
 
@@ -137,7 +155,9 @@ for m in st.session_state.messages:
 
 # Chat input - disabled until PDF indexed
 chat_disabled = not st.session_state.pdf_indexed
-placeholder = "Ask about the PDF..." if st.session_state.pdf_indexed else "📤 Upload a PDF first"
+placeholder = (
+    "Ask about the PDF..." if st.session_state.pdf_indexed else "📤 Upload a PDF first"
+)
 
 if prompt := st.chat_input(placeholder, disabled=chat_disabled):
     st.session_state.messages.append({"role": "user", "content": prompt})
@@ -158,7 +178,10 @@ if prompt := st.chat_input(placeholder, disabled=chat_disabled):
 
         # Generate with context + history
         messages = [
-            {"role": "system", "content": f"Answer using ONLY this context:\n{context}"},
+            {
+                "role": "system",
+                "content": f"Answer using ONLY this context:\n{context}",
+            },
         ] + history
 
         response = ollama.chat(model=LLM_MODEL, messages=messages)
