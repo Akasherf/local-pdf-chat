@@ -39,7 +39,7 @@ A privacy-first, fully local Retrieval-Augmented Generation (RAG) application th
 
 ```bash
 # Clone the repo
-git clone https://github.com/yourusername/local-pdf-chat.git
+git clone https://github.com/Akasherf/local-pdf-chat.git
 cd local-pdf-chat
 
 # Create virtual environment

@@ -1,4 +1,4 @@
-# Dockerfile for Chat with PDF
+# Dockerfile for local-pdf-chat
 # Multi-stage build for smaller final image
 
 # Build stage
@@ -11,9 +11,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install Python dependencies
+# Create virtual environment
+RUN python -m venv /opt/venv
+
+# Activate venv and install Python dependencies
+ENV PATH="/opt/venv/bin:$PATH"
 COPY requirements.txt .
-RUN pip install --no-cache-dir --user -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
 # Runtime stage
 FROM python:3.11-slim
@@ -25,8 +30,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy Python packages from builder
-COPY --from=builder /root/.local /root/.local
+# Copy virtual environment from builder
+COPY --from=builder /opt/venv /opt/venv
 
 # Copy application code
 COPY . .
@@ -35,8 +40,8 @@ COPY . .
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser
 
-# Add local pip to PATH
-ENV PATH=/root/.local/bin:$PATH
+# Activate venv
+ENV PATH="/opt/venv/bin:$PATH"
 
 # Expose Streamlit port
 EXPOSE 8501
